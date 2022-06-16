@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(55), unique=True, nullable=False)
@@ -44,8 +45,8 @@ class Comment(db.Model):
     #quien añadio el comentario
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     #a que pelicula añade el comentario
-    movie_id = db.Column(db.Integer, unique=True, nullable=False)
-    #a que pelicula añade el comentario
+    movie_id = db.Column(db.Integer, unique=True, nullable=False) #aqui necesitamos el movieID de la API
+    #que comentario añade a la pelicula
     user_comment = db.Column(db.String(255), unique=False, nullable=False) 
     #definir las relaciones
     rel_user = db.relationship(User)
@@ -60,3 +61,4 @@ class Comment(db.Model):
             "movie_id": self.movie_id,
             "user_comment": self.user_comment,
         }
+

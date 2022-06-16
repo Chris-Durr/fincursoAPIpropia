@@ -7,10 +7,11 @@ from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
 from api.utils import APIException, generate_sitemap
-from api.models import db
+from api.models import db, User, Comment, Fav_movie
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 #from models import Person
 
@@ -38,6 +39,9 @@ setup_admin(app)
 
 # add the admin
 setup_commands(app)
+
+#Iniciar JWT
+jwt = JWTManager(app)
 
 # Add all endpoints form the API with a "api" prefix
 app.register_blueprint(api, url_prefix='/api')
@@ -68,3 +72,104 @@ def serve_any_other_file(path):
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3001))
     app.run(host='0.0.0.0', port=PORT, debug=True)
+
+#Entregar un token a un usuario con Email y Password correctos
+@app.route('/login', methods=['POST'])
+def iniciar_sesion():
+    request_body = request.get_json()
+    print(request_body)
+    user = User.query.filter_by(email=request_body['email']).first()
+    if user:
+        if user.password == request_body['password']:
+            acceso = create_access_token(identity = user.id)
+
+            return jsonify({
+                "mensaje": "Welcome to the UpsideDown",
+                "token": acceso
+            })
+        else:
+            return "You get lost"
+    else:
+        return "User lost to the Demogorgon", 400
+
+#Funciona el token
+@app.route('/member', methods=['GET'])
+@jwt_required()
+def members():
+    return "Welcome back to the UpsideDown"
+
+#Guardar tu peli favorita
+@app.route('/favorite/movie', methods=['POST'])
+@jwt_required()
+def add_fav_movie():
+    request_body = request.get_json()
+    favmovie = request_body
+    if favmovie:
+        newfav = Fav_movie(user_id=request_body['user_id'], movie_id=request_body['movie_id'])
+        db.session.add(newfav)
+        db.session.commit()
+        return "Añadida con exito"
+    else:
+        return "Te pillo el Demogorgon"
+
+#Borrar la peli que ya no es favorita
+@app.route('/undofav/movie', methods=['POST'])
+@jwt_required()
+def undo_fav_movie():
+    request_body = request.get_json()
+    undofav = Fav_movie.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']). first()
+    if undofav:
+        db.session.delete(undofav)
+        db.session.commit()
+        return "To the UpsideDown with it"
+    else:
+        return "You roll a 1"
+
+#El usuario deja un comentario
+@app.route('/add/comment', methods=['POST'])
+@jwt_required()
+def add_comment():
+    request_body = request.get_json()
+    newcomment = Comment(user_id=request_body['user_id'], movie_id=request_body['movie_id'], user_comment=request_body['user_comment'])
+    if newcomment:
+        db.session.add(newcomment)
+        db.session.commit()
+        return "Stranger comment added "
+    else:
+        return "Error"
+
+# #El usuario pide ver su comentario ---- (NO FUNCIONA EL JSONIFY)
+# @app.route('/your/comment', methods=['GET'])
+# @jwt_required()
+# def get_your_comment():
+#     request_body = request.get_json()
+#     ucomment = Comment.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']).first()
+#     if ucomment:
+#         ucomment = ucomment.serialize()
+#         return jsonify({"resultado": ucomment})
+#     else:
+#         return jsonify({"resultado": "Comment not found"})
+
+#El usuario pide ver su comentario (Si meto ID si funciona pero me devuelve todo porque no estoy filtrando)
+@app.route('/your/comment/<int:id>', methods=['GET'])
+@jwt_required()
+def get_your_comment(id):
+    ucomment = Comment.query.get(id)
+    if ucomment:
+        ucomment = ucomment.serialize()
+        return jsonify({"resultado": ucomment})
+    else:
+        return jsonify({"resultado": "Comment not found"})
+
+#Borrar el comentario
+@app.route('/undocom/movie', methods=['POST'])
+@jwt_required()
+def undo_com():
+    request_body = request.get_json()
+    undocom = Comment.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']). first()
+    if undocom:
+        db.session.delete(undocom)
+        db.session.commit()
+        return "To the UpsideDown with it"
+    else:
+        return "You roll a 1"
