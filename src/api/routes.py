@@ -6,4 +6,3 @@ from api.models import db, User, Comment
 from api.utils import generate_sitemap, APIException
 
 api = Blueprint('api', __name__)
-

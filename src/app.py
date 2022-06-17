@@ -67,12 +67,6 @@ def serve_any_other_file(path):
     response.cache_control.max_age = 0 # avoid cache memory
     return response
 
-
-# this only runs if `$ python src/main.py` is executed
-if __name__ == '__main__':
-    PORT = int(os.environ.get('PORT', 3001))
-    app.run(host='0.0.0.0', port=PORT, debug=True)
-
 #Entregar un token a un usuario con Email y Password correctos
 @app.route('/login', methods=['POST'])
 def iniciar_sesion():
@@ -138,28 +132,28 @@ def add_comment():
     else:
         return "Error"
 
-# #El usuario pide ver su comentario ---- (NO FUNCIONA EL JSONIFY)
-# @app.route('/your/comment', methods=['GET'])
-# @jwt_required()
-# def get_your_comment():
-#     request_body = request.get_json()
-#     ucomment = Comment.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']).first()
-#     if ucomment:
-#         ucomment = ucomment.serialize()
-#         return jsonify({"resultado": ucomment})
-#     else:
-#         return jsonify({"resultado": "Comment not found"})
-
-#El usuario pide ver su comentario (Si meto ID si funciona pero me devuelve todo porque no estoy filtrando)
-@app.route('/your/comment/<int:id>', methods=['GET'])
+#El usuario pide ver su comentario ---- (NO FUNCIONA EL JSONIFY)
+@app.route('/your/comment', methods=['GET'])
 @jwt_required()
-def get_your_comment(id):
-    ucomment = Comment.query.get(id)
+def get_your_comment():
+    request_body = request.get_json()
+    ucomment = Comment.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']).first()
     if ucomment:
         ucomment = ucomment.serialize()
         return jsonify({"resultado": ucomment})
     else:
         return jsonify({"resultado": "Comment not found"})
+
+#El usuario pide ver su comentario (Si meto ID si funciona pero me devuelve todo porque no estoy filtrando)
+# @app.route('/your/comment/<int:id>', methods=['GET'])
+# @jwt_required()
+# def get_your_comment(id):
+#     ucomment = Comment.query.get(id)
+#     if ucomment:
+#         ucomment = ucomment.serialize()
+#         return jsonify({"resultado": ucomment})
+#     else:
+#         return jsonify({"resultado": "Comment not found"})
 
 #Borrar el comentario
 @app.route('/undocom/movie', methods=['POST'])
@@ -173,3 +167,11 @@ def undo_com():
         return "To the UpsideDown with it"
     else:
         return "You roll a 1"
+
+
+
+# this only runs if `$ python src/main.py` is executed esto va a lfinal
+if __name__ == '__main__':
+    PORT = int(os.environ.get('PORT', 3001))
+    app.run(host='0.0.0.0', port=PORT, debug=True)
+
