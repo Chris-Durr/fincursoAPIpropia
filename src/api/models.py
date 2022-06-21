@@ -45,7 +45,7 @@ class Comment(db.Model):
     #quien añadio el comentario
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     #a que pelicula añade el comentario
-    movie_id = db.Column(db.Integer, unique=True, nullable=False) #aqui necesitamos el movieID de la API
+    movie_id = db.Column(db.Integer, unique=False, nullable=False) #aqui necesitamos el movieID de la API
     #que comentario añade a la pelicula
     user_comment = db.Column(db.String(255), unique=False, nullable=False) 
     #definir las relaciones
