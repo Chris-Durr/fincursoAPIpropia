@@ -132,28 +132,33 @@ def add_comment():
     else:
         return "Error"
 
-#El usuario pide ver su comentario ---- (NO FUNCIONA EL JSONIFY)
-@app.route('/your/comment', methods=['GET'])
+#El usuario pide ver su comentario
+@app.route('/your/comment/<int:id>', methods=['GET'])
 @jwt_required()
-def get_your_comment():
-    request_body = request.get_json()
-    ucomment = Comment.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']).first()
+def get_your_comment(id):
+    identidad = get_jwt_identity()
+    ucomment = Comment.query.filter_by(user_id=identidad, movie_id=id).first()
     if ucomment:
         ucomment = ucomment.serialize()
         return jsonify({"resultado": ucomment})
     else:
         return jsonify({"resultado": "Comment not found"})
 
-#El usuario pide ver su comentario (Si meto ID si funciona pero me devuelve todo porque no estoy filtrando)
-# @app.route('/your/comment/<int:id>', methods=['GET'])
-# @jwt_required()
-# def get_your_comment(id):
-#     ucomment = Comment.query.get(id)
-#     if ucomment:
-#         ucomment = ucomment.serialize()
-#         return jsonify({"resultado": ucomment})
-#     else:
-#         return jsonify({"resultado": "Comment not found"})
+#El usuario edita su comentario
+@app.route('/edit/comment', methods=['POST'])
+@jwt_required()
+def edit_comment():
+    request_body = request.get_json() #Se necesita el user_id, movie_id y el nuevo comentario (new_comment).
+    new_comment = request_body['new_comment']
+    edit_comment = Comment.query.filter_by(user_id=request_body['user_id'], movie_id=request_body['movie_id']). first()
+    if edit_comment:
+        edit_comment.user_comment = new_comment
+        db.session.commit()
+        return jsonify({"Successfully change"})
+    else:
+        return jsonify({"Could not edit comment"})
+
+
 
 #Borrar el comentario
 @app.route('/undocom/movie', methods=['POST'])
@@ -168,7 +173,15 @@ def undo_com():
     else:
         return "You roll a 1"
 
-
+#Pedir todos los comentarios de una pelicula sin que sea necesario estar registrado.
+@app.route('/comment/<int:id>', methods=['GET'])
+def get_all_comments(id):
+    allcomments = Comments.query.filter_by(movie_id=id).all()
+    if allcomments:
+        allcomments = allcomments.serialize()
+        return jsonify({"resultado": allcomments})
+    else:
+        return jsonify({"resultado": "Comment not found"})
 
 # this only runs if `$ python src/main.py` is executed esto va a lfinal
 if __name__ == '__main__':
