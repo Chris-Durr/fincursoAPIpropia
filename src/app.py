@@ -67,6 +67,23 @@ def serve_any_other_file(path):
     response.cache_control.max_age = 0 # avoid cache memory
     return response
 
+#Registrar usuarios el body contendra username email y password
+#Queremos que  tanto el correo como el usuario sean unicos
+@app.route('/register', methods=['POST'])
+def register():
+    request_body=request.get_json()
+    mailtaken=User.query.filter_by(email=body['email']),first()
+    nametaken=User.query.filter_by(username=body['username']),first()
+    if mailtaken:
+        return "Email already taken" 
+        else if nametaken:
+            return "User already taken" 
+        else
+            newuser=User(username=body['username'], email=body['email'], password=body['password'])
+            db.session.add(newuser)
+            db.session.commit()
+            return jsonify(body), 
+
 #Entregar un token a un usuario con Email y Password correctos
 @app.route('/login', methods=['POST'])
 def iniciar_sesion():
