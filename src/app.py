@@ -76,13 +76,14 @@ def register():
     nametaken=User.query.filter_by(username=body['username']),first()
     if mailtaken:
         return "Email already taken" 
-        else if nametaken:
+        if nametaken:
             return "User already taken" 
-        else
+        else:
             newuser=User(username=body['username'], email=body['email'], password=body['password'])
             db.session.add(newuser)
             db.session.commit()
-            return jsonify(body), 
+            return jsonify(body)
+            #NOTA PROGRAMACION; ESTAR ATENTO SI LOS IF ELSE SON CORRECTOS
 
 #Entregar un token a un usuario con Email y Password correctos
 @app.route('/login', methods=['POST'])
